@@ -1,55 +1,44 @@
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import express from 'express';
-import http from 'http';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import { createConnection } from "typeorm";
-import schema from "./api/schema.js";
+const { ApolloServer } = require('apollo-server');
+const { makeExecutableSchema } = require('graphql-tools');
+const path = require('path');
+const { loadFilesSync } = require('@graphql-tools/load-files');
+const { mergeTypeDefs, mergeResolvers } = require('@graphql-tools/merge');
 
+
+const current_dirname = path.resolve();
+console.log(current_dirname);
+const typeDefs = loadFilesSync(path.join(__dirname, './api/**/*.graphql'));
+const resolvers = loadFilesSync(path.join(__dirname, './api/**/*.js'));
+
+// console.log(typeDefs);
+// console.log(resolvers);
+
+// // Define your schema using GraphQL schema language
 // const typeDefs = `
 //   type Query {
 //     hello: String
 //   }
 // `;
 
+// // Define your resolvers
 // const resolvers = {
 //   Query: {
-//     hello: () => 'Hello, world!',
+//     hello: () => 'Hello world!',
 //   },
 // };
 
-createConnection().then(() => {
-  console.log("Connected to database");
-}).catch((error) => {
-  console.log("Error connecting to database:", error);
+// Create your executable schema
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
 });
 
-const app = express();
-const httpServer = http.createServer(app);
+
 const server = new ApolloServer({
   schema,
-  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
-await server.start();
-app.use(
-  '/graphql',
-  cors(),
-  bodyParser.json(),
-  expressMiddleware(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
-  }),
-);
 
-await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-console.log(`🚀 Server ready at http://localhost:4000/graphql`);
-
-// const server = new ApolloServer({ typeDefs, resolvers });
-// const { url } = await startStandaloneServer(server, {
-//   context: async ({ req }) => ({ token: req.headers.token }),
-//   listen: { port: 4000 },
-// });
-
-
-// console.log(`🚀  Server ready at ${url}`);
+// Start the server
+server.listen().then(({ url }) => {
+  console.log(`Server ready at ${url}`);
+});
