@@ -1,0 +1,11 @@
+{
+    "type": "postgres",
+    "database": "muberjs",
+    "synchronize": true,
+    "logging": true,
+    "entities": ["entities/**/*.*"],
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "2324"
+}
